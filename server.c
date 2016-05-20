@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <limits.h>
 #include <errno.h>
- #include <sys/wait.h>
+#include <sys/wait.h>
 
 #define US_LOGIN_SUCCESSFUL	-1
 #define US_NOT_REGISTERED   -2
@@ -18,9 +18,8 @@
 #define US_WRONG_PASS  		-4
 
 static tree *users;
-static char path[] = "$DIRSO/.Backup/";
-static char pathAcc[] = "$DIRSO/.Backup/Accounts/";
-
+static char path[] = "/.Backup/";
+static char pathAcc[] = "/.Backup/Accounts/";
 
 void loaddata(){
 
@@ -65,17 +64,19 @@ void loaddata(){
 void sendMessage(char *fifo, char *message)
 {
 	int fd = 0, n = 0;
-	char ff[512];
-	
-	strcpy(ff, "FIFOs/");
-	strcat(ff, fifo);
+	char *ff = NULL;
+	const char *env = getenv("HOME");
+
+	ff=strdup(env);
+	strcat(ff, "/.Backup/FIFOs/fifo");
+	printf("\n--%s--\n",ff);
 	fd = open(ff, O_WRONLY);
 	if(fd < 0){
 		perror("sendMessage open");
 		_exit(EXIT_FAILURE);
 	}
 
-	n = write(fd, message, sizeof(char) * strlen(message));
+	n = write(1, message, strlen(message));
 	if(n<0){
 		perror("sendMessage write");
 		_exit(EXIT_FAILURE);
@@ -281,20 +282,20 @@ int reg(char *username, char *pass){
 	Command c = NULL;
 
 	res = existUser(users->root,username,pass);
-
+	printf("\n\n%d\n\n",res);
 	if(res == -2){
 
-	strcpy(dir, "mkdir ");
-	strcat(dir, pathAcc);
-	strcat(dir, username);
-	strcat(dir, FOLDER_NAME);
+// 	strcpy(dir, "mkdir ");
+// 	strcat(dir, pathAcc);
+// 	strcat(dir, username);
+// //	strcat(dir, FOLDER_NAME);
 
-    c = readCommand(dir);
+//     c = readCommand(dir);
 
-    if(c->lines > 0){
-    	perror("reg mkdir");
-    	_exit(EXIT_FAILURE);	
-    } 
+//     if(c->lines > 0){
+//     	perror("reg mkdir");
+//     	_exit(EXIT_FAILURE);	
+//     } 
 
 	insertTree(users, username, pass);
 
@@ -309,6 +310,8 @@ int readFifo(char *fifo, char ***message)
 	char buffer[1024];
 	char *token, *strArray[128];
 	
+	printf("\n%s\n",fifo);
+
 	fd = open(fifo, O_RDONLY);
 	if (fd < 0)
 	{
@@ -320,14 +323,15 @@ int readFifo(char *fifo, char ***message)
 	
 	if (n < 0){
 		perror("shell read");
-		_exit(EXIT_FAILURE);
+		//_exit(EXIT_FAILURE);
 	}
-	
-	token = strtok(buffer, " ");
+	printf("\nLI! -- %s\n", buffer);
+
+	token = strtok(buffer,":");
 
 	while(token != NULL){
 		strArray[i] = strdup(token);
-		token = strtok(NULL, " ");
+		token = strtok(NULL, ":");
 		i++;
 	}
 
@@ -343,7 +347,10 @@ int readFifo(char *fifo, char ***message)
 	for (j = 0; j < i; j++)
 		printf(":[%s]", buffer[j]);
 	printf("\n");*/
-	
+
+	while(i>0)
+		printf("\n%s\n",strArray[i--]);
+
 	if (strcmp(strArray[1], "log") == 0) return 1;
 	if (strcmp(strArray[1], "reg") == 0) return 2;
 	if (strcmp(strArray[2], "backup") == 0) return 3;
@@ -355,37 +362,44 @@ int readFifo(char *fifo, char ***message)
 int main(){
 	int fd = 0, tipe = 0, success = 0, pid = 0; 
 	char **message = NULL; 
-	char *dir;
+	char *dir = NULL;
+	const char *env = getenv("HOME");
 	pid_t cpid[5];
 	int contaF = 0;
 
 	loaddata();
 
-	dir = strdup(path);
+	dir = strdup(env);
+	strcat(dir,path);
 	strcat(dir,"FIFOs/fifo");
-	fd =mkfifo(dir, 0666);
 	if (fd < 0){
 		if(errno != EEXIST){
 			perror("main mkfifo");
 			_exit(EXIT_FAILURE);
 		}
 	}
-	while(1){
 
-		fd = open("$DIRSO/.Backup/FIFOs/fifo", O_RDONLY);
-		if(fd < 0){
-			perror("main open fifo");
-			_exit(EXIT_FAILURE);
-		}
+	fd = open(dir, O_RDONLY);
+	if(fd < 0){
+		perror("main open fifo");
+		_exit(EXIT_FAILURE);
+	}
+
+	while(1){
+		dir = strdup(env);
+		strcat(dir,path);
+		strcat(dir,"FIFOs/fifo");
 		message = NULL;
-		tipe = readFifo("$DIRSO/.Backup/FIFOs/fifo", &message);
-		
+		printf("\n|%s|\n",dir);
+		tipe = readFifo(dir, &message);
 		if(tipe==1 || tipe == 2){
 				if(tipe == 1) {
-				success = login(message[4],message[5]);
+					printf("\nM3- %s\nM4- %s\n",message[3],message[4]);
+				success = login(message[3],message[4]);
 					switch(success){
-						case 0:
+						case 1:
 							sendMessage(message[3], "US_LOGIN_SUCCESSFUL");
+							break;
 						case US_NOT_REGISTERED: /* Utilizador não existe */
 			    			sendMessage(message[3], "UT_NAO_EXISTE");
 			    			break;
@@ -398,7 +412,6 @@ int main(){
 			    			sendMessage(message[3], "ERRO");
 			    			break;
 		    		}
-    				break;
     			}
 
  				else if(tipe == 2){
@@ -417,7 +430,6 @@ int main(){
 		    				sendMessage(message[3], "ERRO");
 		    				break;
 		    		}
-    				break;
     			}
     		}
     	else if(tipe > 2){
@@ -456,8 +468,6 @@ int main(){
 		
 		wait(NULL);
 
-
-		return EXIT_SUCCESS;
 	}
 
 	return 0;	
