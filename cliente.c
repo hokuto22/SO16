@@ -53,7 +53,7 @@ void rotinaCliente(int sinal)
 				write(1, utJaExiste, sizeof(utJaExiste));
 			break;
 		
-		case SIGILL:
+		case SIGINT:
 				write(1, registo, sizeof(registo));
 				reg++;
 			break;		
