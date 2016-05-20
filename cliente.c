@@ -14,45 +14,40 @@ static char pathf[] = "$DIRSO/.Backup/FIFOs/";
 static int ppid = 0;
 static int fifo = 0;
 static char *uname;
-static char *files[1024] = {0};
-static int nfiles = 0;
+//static char *files[1024] = {0};
+//static int nfiles = 0;
 
 #define DIRSO = getenv("DIRSO")
 
 void rotinaShell(int sinal)
 {
-	sucesso = 0;
+	int sucesso = 0;
 	char desligado[] = "Servidor desligado!\n";
 	switch (sinal)
 	{
 		case SIGUSR1: 
-					printf("%s: copiado", files[nfiles]);
-					nfiles++;
+				printf("ficheiro copiado\n");
+					//printf("%s: copiado\n", files[nfiles]);
+					//nfiles++;
 					pause();
-								/*sucesso = write(1, utNaoExiste, sizeof(utNaoExiste));
-					if (sucesso < 0)
-					{
-						perror("rotinaShell write");
-						_exit(EXIT_FAILURE);
-					}*/
 				break;
 		
 		case SIGUSR2:
-					printf("%s: recuperado", files[nfiles]);
+				printf("ficheiro recuperado\n");
+					//printf("%s: recuperado\n", files[nfiles]);
 					pause();
-					
-				/*sucesso = write(1, utNaoExiste, sizeof(utNaoExiste));
-					if (sucesso < 0)
-					{
-						perror("rotinaShell write");
-						_exit(EXIT_FAILURE);
-					}
-					*/ 
 			break;
+			
 		case SIGCONT:
-					 files[1024] = {0};
-					 nfiles = 0;
+					 //files[1024] = 0;
+					 //nfiles = 0;
 			break;	
+
+		case SIGTERM:
+					printf("Algo correu mal\n");
+					//files[1024] = 0;
+					//nfiles = 0;
+			break;
 
 		case SIGQUIT: /* Ignorar SIGQUIT */
 			break;
@@ -189,11 +184,10 @@ char *sendlog(char **info, int in, int num){
 
 
 void sendAction(char **info, int in, int num){
-	int i = 0, n = 0, pid = 0;
+	int  fp = 0, i = 0, n = 0, pid = 0;
 	char send[512] = {0}; /* Tamanho máximo das mensagens 512 bytes */
-	char *NULL, *res = NULL, ff[512], pidC[128];
+	char pidC[128];
 	
-	sprintf(ff, "%s", pathf);
 	pid = ppid;
 	sprintf(pidC, "%d", pid);
 
@@ -211,16 +205,16 @@ void sendAction(char **info, int in, int num){
 		strcat(send, ":");
 		strcat(send, info[i]);
 	}
-	strcat(ff, pidC);
-	fpid = open(ff, O_RDONLY, 0666);
-	n = write(fpid, send, sizeof(char) * strlen(send)); /* Nunca enviar mensagens maiores que 512 bytes */
+	
+	fp = open("$DIRSO/.Backup/FIFOs/fifo", O_RDONLY);
+	n = write(fp, send, sizeof(char) * strlen(send)); /* Nunca enviar mensagens maiores que 512 bytes */
 	if (n < 0)
 	{
 		perror("Comunication with the Server failed!\n");
 		_exit(EXIT_FAILURE);
 	}
     /*printf("MENSAGEM ENVIADA = [%s]\n", enviar);*/
-	close(fpid);
+	close(fp);
 	pause();
 	
 }
@@ -380,7 +374,7 @@ int main(void)
 				else
 				if (strcmp(response, "US_LOGIN_SUCCESSFUL") == 0)
 				{
-					sucesso = write(1, Login, sizeof(Login));
+					sucesso = write(1, login, sizeof(login));
 					if (sucesso < 0)
 					{
 						perror("main write 8");

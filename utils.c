@@ -149,7 +149,7 @@ ssize_t readLine(int fildes, void *buf, size_t nbyte)
 	return res;
 }
 
-/*
+
 Command readCommand(char *command)
 {
 	int i = 0, tam = 1024, j = 0, pid = 0, status = 0, pd[2], erro = 0;
@@ -187,11 +187,11 @@ Command readCommand(char *command)
 			close(pd[0]); 
 			dup2(pd[1], 1); 
 			close(pd[1]); 
-			execl("/bin/sh", "sh", "-c", Command, (char *) NULL);
+			execl("/bin/sh", "sh", "-c", command, (char *) NULL);
 			perror("readCommand execl");
 			_exit(EXIT_FAILURE);
 		
-		default:/
+		default:
 			close(pd[1]); 
 			erro = waitpid(pid, &status, 0); 
 			if (erro < 0) 
@@ -235,4 +235,3 @@ Command readCommand(char *command)
 	
 	return res;
 }
-*/

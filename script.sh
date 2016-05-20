@@ -8,8 +8,7 @@ make users-log
 make dummy-files
 
 clear
-./ligarServidor
-sleep 1
+./servidor
 
 ./cliente << EOF
 1 

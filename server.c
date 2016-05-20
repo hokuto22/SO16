@@ -5,10 +5,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
 #include <limits.h>
 #include <errno.h>
+ #include <sys/wait.h>
 
 #define US_LOGIN_SUCCESSFUL	-1
 #define US_NOT_REGISTERED   -2
@@ -18,27 +20,27 @@
 static tree *users;
 static char path[] = "$DIRSO/.Backup/";
 static char pathAcc[] = "$DIRSO/.Backup/Accounts/";
-static int processesinqueue;
+
 
 void loaddata(){
 
-	int n = 0, fd = 0, error = 0, i = 0;
+	int fd = 0, error = 0, i = 0;
 	char line[1024];
 	char *dir, *token, *strArray[128];
  	
  	users = createTree();
 
-	strcpy(dir, pathAcc);
+	dir = strdup(pathAcc);
 	strcat(dir, "users.log");
 
 	fd = open(dir, O_RDONLY);
 
 	if(fd<0){
-		perror("loaddata open");
-		_exit(EXIT_FAILURE);
+		open(dir, O_RDWR | O_TRUNC);
 	}
+	else{
 
-	while((readline(fd,line, sizeof(line))) > 0){
+	while((readLine(fd,line, sizeof(line))) > 0){
 	
 		token = strtok(line, ":");
 
@@ -57,13 +59,13 @@ void loaddata(){
 		perror("loaddata close");
 		_exit(EXIT_FAILURE);
 	}
+	}
 }
 
 void sendMessage(char *fifo, char *message)
 {
-	int i = 0, n = 0, response = 0, pid = 0;
-	char send[512] = {0}, receve[512] = {0}; /* Tamanho máximo das mensagens 512 bytes */
-	char *error = NULL, *res = NULL, ff[512], pidC[128];
+	int fd = 0, n = 0;
+	char ff[512];
 	
 	strcpy(ff, "FIFOs/");
 	strcat(ff, fifo);
@@ -82,13 +84,14 @@ void sendMessage(char *fifo, char *message)
 	close(fd);
 }
 
-int backup(int ppid, char *username, char *files){
+int backup(char *ppid, char *username, char *files){
 
-	int error = 0, n = 0, i = 0, m = 0, j = 0, k = 0, l = 0; 
+	int n = 0, i = 0, m = 0, j = 0, k = 0, l = 0, pid = 0; 
 	char *token, *strArray[1024], *pArray[1024], *sArray[1024], *f, *ddir, *mdir, *dir, *dir2, *mkd, *filen, *s1, *sha;
 	Command c = NULL;
 
-	strcpy(dir2, pathAcc);
+	pid = atoi(ppid);
+	dir2 = strdup(pathAcc);
 	strcat(dir2, "/");
 	strcat(dir2, username);
 	token =  strtok( files, " ");
@@ -96,7 +99,7 @@ int backup(int ppid, char *username, char *files){
 	while(token != NULL){
 		strArray[i] = strdup(token);
 		token =  strtok(NULL, " ");
-		i++
+		i++;
 	}
 
 	for(k = 0; k < i; k++){
@@ -112,13 +115,13 @@ int backup(int ppid, char *username, char *files){
 		}
 
 		filen = pArray[n-1];
-		strcpy(f, "ls");
+		f = strdup("ls");
 		strcat(f, dir);
 		c = readCommand(f);
 
 		for(l = 0; l <c->lines; l++){
 
-			strcpy(sha, "sha1sum ");
+			sha = strdup("sha1sum ");
 			strcat(sha, c->output[l]);
 
 			c = readCommand(sha);
@@ -136,9 +139,9 @@ int backup(int ppid, char *username, char *files){
 
 			for( j = 0; j < n-2; j++){
 				strcat(dir2, pArray[j]);
-				strcpy(mkd, "mkdir ");
+				mkd = strdup("mkdir ");
 				strcat(mkd, dir2);
-				c = command(mkd);
+				c = readCommand(mkd);
 
 				if(j == n-2){
 					if(c->lines == 1 ){
@@ -147,16 +150,16 @@ int backup(int ppid, char *username, char *files){
 					}
 				}
 			}
-			strcpy(ddir, mkd);
+			ddir = strdup(mkd);
 			strcat(ddir, "/data/");
-			c = command(ddir);
+			c = readCommand(ddir);
 			if(c->lines == 1 ){
 				perror("backup mkdir");
 				_exit(EXIT_FAILURE);
 			}
-			strcpy(mdir, mkd);
+			mdir = strdup(mkd);
 			strcat(mdir, "/metadata/");
-			c = command(mdir);
+			c = readCommand(mdir);
 			if(c->lines == 1 ){
 				perror("backup mkdir");
 				_exit(EXIT_FAILURE);
@@ -173,10 +176,10 @@ int backup(int ppid, char *username, char *files){
 			strcat(mkd, s1);
 			strcat(mkd, " ");
 			strcat(mkd, mdir);
-			strcat(mkd, pArray[n-1]);
+			strcat(mkd, filen);
 
 			c = readCommand(mkd);
-			kill(ppid, SIGUSR1);
+			kill(pid, SIGUSR1);
 		}
 	}
 	return 0; /*CORREU BEM!*/
@@ -189,13 +192,12 @@ int saveUsers(node *users)
 	FILE *fp;
 
 	int error = 0;
-	char file[1024];
 	char *dir;
 
-	strcpy(dir, pathAcc);
+	dir = strdup(pathAcc);
 	strcat(dir, "users.log");
 	fp = fopen(dir,"w+");
-	if (fp < 0)
+	if (fp == NULL )
 	{
 		perror("saveUsers fopen");
 		_exit(EXIT_FAILURE);
@@ -213,13 +215,14 @@ int saveUsers(node *users)
 	return 0;
 }
 
-int restore(int ppid, char *username, char *files){
+int restore(char *ppid, char *username, char *files){
 
-	int n = 0, j = 0; 
+	int n = 0, j = 0, pid = 0; 
 	char *token, *pArray[1024], *dir, *dir2, *filen, *rest, *find, *drest;
 	Command c = NULL;
 
-	strcpy(dir2, path);
+	pid = atoi(ppid);
+	dir2 = strdup(path);
 	strcat(dir2, username);
 	strcat(dir2, "/");
 
@@ -234,32 +237,32 @@ int restore(int ppid, char *username, char *files){
 	}
 
 	filen = pArray[n-1];
-
-	for( j = 0; j < n-2; j++ ){
+	drest = strdup(pArray[j]);
+	for( j = 1; j < n-2; j++ ){
 		strcat(drest,pArray[j]);
 		strcat(drest,"/");
 	}
 
 	strcat(drest, "metadata/");
 	strcat(drest, filen);
-	strcat(find, "readlink -e ");
+	find = strdup("readlink -e ");
 	strcat(find, drest);
 
 	c = readCommand(find);
 
-	strcpy(rest, "gunzip -c ");
+	rest = strdup("gunzip -c ");
 	strcat(rest, c->output[0]);
 	strcat(rest, " > ");
-	strcat(rest, files);
+	strcat(rest, dir);
 
 	c = readCommand(rest);
-	if(c->linhas == 0)
-		kill(ppid,SIGUSR2);
+	if(c->lines == 0) 
+		kill(pid,SIGUSR2);
 
 	return 0;
 }
 
-int login(node *u, char *username, char *pass){
+int login( char *username, char *pass){
 	int res = 0;
 
 	res = existUser(users->root,username,pass);
@@ -313,7 +316,7 @@ int readFifo(char *fifo, char ***message)
 		_exit(EXIT_FAILURE);
 	}
 	
-	n = readline(fd, buffer, sizeof(buffer));
+	n = readLine(fd, buffer, sizeof(buffer));
 	
 	if (n < 0){
 		perror("shell read");
@@ -350,17 +353,17 @@ int readFifo(char *fifo, char ***message)
 }
 
 int main(){
-	int fd = 0, tipe = 0, success = 0, pid = 0, autent = 0; 
-	char *message = NULL; 
+	int fd = 0, tipe = 0, success = 0, pid = 0; 
+	char **message = NULL; 
 	char *dir;
 	pid_t cpid[5];
-	int contaF = 0, status;
+	int contaF = 0;
 
 	loaddata();
 
-	strcpy(dir, path);
+	dir = strdup(path);
 	strcat(dir,"FIFOs/fifo");
-	fd =makefifo(dir, 0666);
+	fd =mkfifo(dir, 0666);
 	if (fd < 0){
 		if(errno != EEXIST){
 			perror("main mkfifo");
@@ -379,12 +382,12 @@ int main(){
 		
 		if(tipe==1 || tipe == 2){
 				if(tipe == 1) {
-				success = login(users->root,message[3],message[4]);
+				success = login(message[4],message[5]);
 					switch(success){
 						case 0:
-							sendMessage(message[2], "US_LOGIN_SUCCESSFUL");
+							sendMessage(message[3], "US_LOGIN_SUCCESSFUL");
 						case US_NOT_REGISTERED: /* Utilizador não existe */
-			    			sendMessage(message[2], "UT_NAO_EXISTE");
+			    			sendMessage(message[3], "UT_NAO_EXISTE");
 			    			break;
 			    			
 		    			case US_WRONG_PASS: /* Pass errada */
@@ -392,7 +395,7 @@ int main(){
 		    				break;
 		    			
 			    		default:
-			    			sendMessage(message[2], "ERRO");
+			    			sendMessage(message[3], "ERRO");
 			    			break;
 		    		}
     				break;
@@ -403,15 +406,15 @@ int main(){
 		    		switch (success)
 		    		{
 		    			case 0: /* Sucesso */
-				    		sendMessage(message[2], "OK");
+				    		sendMessage(message[3], "OK");
 		    				break;
 		    			
 		    			case US_ALREADY_EXISTS: /* Utilizador já existe */
-			    			sendMessage(message[2], "US_ALREADY_EXISTS");
+			    			sendMessage(message[3], "US_ALREADY_EXISTS");
 			    			break;
 		    			
 			    		default:
-		    				sendMessage(message[2], "ERRO");
+		    				sendMessage(message[3], "ERRO");
 		    				break;
 		    		}
     				break;
@@ -420,31 +423,34 @@ int main(){
     	else if(tipe > 2){
     		if(contaF < 5){
     			cpid[contaF] = fork();
-    			contaF++;
+    			
     			if(tipe == 3 && cpid[contaF] == 0){
-    				success = backup(pid,message[0],&message[3]);
+    				success = backup(message[3],message[0],message[4]);
+    				pid = atoi(message[3]);
     				switch(success)
    					{
    						case 0:
-	    					sendMessage(message[0], "Successfull Backup!");
+	    					kill(pid, SIGCONT);
    							break;
 	   	    			default:
-	    					sendMessage(message[0], "Fail Backup!");
+	   	    				kill(pid, SIGTERM);
 	    			}
 	    			_exit(0);
 	   			}
 
 				else if(tipe == 4 && cpid[contaF] == 0){
-					success = restore(pid, message[0],&message[3]);
+					success = restore(message[3], message[0],message[4]);
+					pid = atoi(message[3]);
 					switch(success){
 						case 0:
-	    					sendMessage(message[0], "Successfull Restore!");
+	    					kill(pid, SIGCONT);
    							break;
 	   	    			default:
-	    					sendMessage(message[0], "Fail Restore!");
+	    					kill(pid, SIGTERM);
 					}
 					_exit(0); /*restore*/    		
 				}
+				contaF++;
 			}
 		}
 		
