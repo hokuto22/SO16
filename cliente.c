@@ -14,8 +14,64 @@
 static int ppid = 0;
 static int fifo = 0;
 static char *uname;
+static char *files[1024] = {0};
+static int nfiles = 0;
 
 #define DIRSO = getenv("DIRSO")
+
+void rotinaShell(int sinal)
+{
+	sucesso = 0;
+	char desligado[] = "Servidor desligado!\n";
+	/*char utNaoExiste[] = "Nao existe conta com esse nome!\n";
+	char utPassErrada[] = "Password errada!\n";
+	char utJaExiste[] = "Utilizador com esse nome ja existe!\n";
+	*/
+	switch (sinal)
+	{
+		case SIGUSR1: 
+					printf("%s: copiado", files[nfiles]);
+					nfiles++;
+					pause();
+								/*sucesso = write(1, utNaoExiste, sizeof(utNaoExiste));
+					if (sucesso < 0)
+					{
+						perror("rotinaShell write");
+						_exit(EXIT_FAILURE);
+					}*/
+				break;
+		
+		case SIGUSR2:
+					printf("%s: recuperado", files[nfiles]);
+					pause();
+					
+				/*sucesso = write(1, utNaoExiste, sizeof(utNaoExiste));
+					if (sucesso < 0)
+					{
+						perror("rotinaShell write");
+						_exit(EXIT_FAILURE);
+					}
+					*/ 
+			break;
+		case SIGCONT:
+					 files[1024] = {0};
+					 nfiles = 0;
+			break;	
+
+		case SIGQUIT: /* Ignorar SIGQUIT */
+			break;
+			
+		case SIGPIPE:
+			sucesso = kill(ppid, SIGKILL); /* Matar processo */
+			sucesso = write(1, desligado, sizeof(desligado));
+			if (sucesso < 0)
+			{
+				perror("rotinaShell write 3");
+				_exit(EXIT_FAILURE);
+			}
+			_exit(1);
+	}
+}
 
 /* Valida o nome do utilizador: 
 retorna 0 em caso de sucesso, 
@@ -74,10 +130,10 @@ Argumento informacao[0] indica o tipo de mensagem.
 Espera pela resposta por um FIFO criado da seguinte maneira: 
 	informacao[0]:pidResposta:Resto da informacao
 Retorna a mensagem recebida. */
-char *sendMessage(int id, char **info, int in, int num)
+void sendMessage(int id, char **info, int in, int num)
 {
-	int i = 0, n = 0, response = 0, pid = 0;
-	char send[512] = {0}, receve[512] = {0}; /* Tamanho máximo das mensagens 512 bytes */
+	int i = 0, n = 0, pid = 0;
+	char send[512] = {0}; /* Tamanho máximo das mensagens 512 bytes */
 	char *error = NULL, *res = NULL, ff[512], pidC[128];
 	
 	strcpy(ff, "FIFOs/");
@@ -109,16 +165,6 @@ char *sendMessage(int id, char **info, int in, int num)
 			_exit(EXIT_FAILURE);
 		}
 	}
-	strcat(ff, pidC);
-	response = mkfifo(ff, 0666);
-    if (response < 0)
-    {
-    	if (errno != EEXIST)
-    	{
-    		perror("sendMessage mkfifo");
-    		_exit(EXIT_FAILURE);
-    	}
-    }
 	n = write(fifo, send, sizeof(char) * strlen(send)); /* Nunca enviar mensagens maiores que 512 bytes */
 	if (n < 0)
 	{
@@ -126,23 +172,9 @@ char *sendMessage(int id, char **info, int in, int num)
 		_exit(EXIT_FAILURE);
 	}
     /*printf("MENSAGEM ENVIADA = [%s]\n", enviar);*/
-	response = open(ff, O_RDONLY, 0666);
-	if (response < 0)
-	{
-		perror("sendMessage open");
-		_exit(EXIT_FAILURE);
-	}
-	n = read(response, receve, sizeof(receve));
-	if (n < 0)
-	{
-		perror("sendMessage read");
-		_exit(EXIT_FAILURE);
-	}
-	close(response);
-	/*printf("MENSAGEM RECEBIDA = [%s]\n", receber);*/
-	res = strdup(receve);
+	close(fifo);
+	pause();
 	
-	return res;
 }
 
 
@@ -151,7 +183,7 @@ void shell(){
 	int ct = 1024, exit = 0, n = 0, i;
 	char *line = (char *)malloc(sizeof(char) * ct);
 	char comandos[] = "sobucli backup path\nsobucli restore path\n";
-	char *token, *strArray[128], *response;
+	char *token, *strArray[128];
 
 	if(line == NULL){
 		perror("shell malloc");
@@ -187,15 +219,7 @@ void shell(){
 			token = strtok(NULL, " ");
 			i++;
 		}
-		response=sendMessage(1, strArray, 2, i);
-		strcat(response,"\n");
-
-		n = write(1,response,strlen(response));
-		if(n<0) {
-			perror("Pedido perdido!");
-			_exit(EXIT_FAILURE);
-		}
-
+		sendMessage(1, strArray, 2, i);
 	}
 }
 
@@ -212,15 +236,16 @@ int main(void)
 	char ligado[] = "Ligacao estabelecida.\n";
 	char login[] = "Login realizado sucesso!\n";
 	char registo[] = "Conta registada com sucesso!\n";
-	char utNaoExiste[] = "Nao existe conta com esse nome!\n";
-	char utPassErrada[] = "Password errada!\n";
-	char utJaExiste[] = "Utilizador com esse nome ja existe!\n";
 	char erro[] = "Ocorreu um erro no servidor ao efetuar o pedido!\n";
 	
     clrscr(); /* Limpa ecrã */
-   	/*signal(SIGPIPE, rotinaShell);  Prepara-se para receber SIGPIPE, pois o servidor pode 
+    signal(SIGUSR1, rotinaShell); /* Prepara-se para receber SIGPIPE, pois o servidor pode 
    	    não estar ligado */
-   	/*signal(SIGQUIT, rotinaShell);*/
+   	signal(SIGUSR2, rotinaShell);
+   	signal(SIGCONT, rotinaShell);
+   	signal(SIGPIPE, rotinaShell); /* Prepara-se para receber SIGPIPE, pois o servidor pode 
+   	    não estar ligado */
+   	signal(SIGQUIT, rotinaShell);
     ppid = getpid(); /* Guarda o PID deste processo (pai de todos os outros que serão criados) 
         para criar FIFO de receção com nome "PPID" */
 	sucesso = write(1, ligar, sizeof(ligar));
@@ -281,47 +306,9 @@ int main(void)
 				}
 				readLine(0, pedido, sizeof(pedido));
 				mensagem[3] = strdup(pedido);
-				resposta = sendMessage (0, mensagem, 2, 4);
-				if (resposta == 0)
-				{
-					sucesso = write(1, login, sizeof(login));
-					if (sucesso < 0)
-					{
-						perror("main write 6");
-						_exit(EXIT_FAILURE);
-					}
-					uname = mensagem[2];
-					shell();
-				}
-				if (strcmp(resposta, "UT_NAO_EXISTE") == 0)
-				{
-					sucesso = write(1, utNaoExiste, sizeof(utNaoExiste));
-					if (sucesso < 0)
-					{
-						perror("main write 7");
-						_exit(EXIT_FAILURE);
-					}
-				}
-				else
-				if (strcmp(resposta, "UT_PASS_ERRADA") == 0)
-				{
-					sucesso = write(1, utPassErrada, sizeof(utPassErrada));
-					if (sucesso < 0)
-					{
-						perror("main write 8");
-						_exit(EXIT_FAILURE);
-					}
-				}
-				else
-				if (strcmp(resposta, "ERRO") == 0)
-				{
-					sucesso = write(1, erro, sizeof(erro));
-					if (sucesso < 0)
-					{
-						perror("main write 9");
-						_exit(EXIT_FAILURE);
-					}
-				}
+				sendMessage (0, mensagem, 2, 4);
+				uname = mensagem[2];
+				shell();
 			    break;
 
 		    case 2: /* Registar contas */
@@ -337,36 +324,7 @@ int main(void)
 				}
 				readLine(0, pedido, sizeof(pedido));
 				mensagem[3] = strdup(pedido);
-				resposta = sendMessage (0,mensagem, 2, 4);
-				if (strcmp(resposta, "Registo efetuado com sucesso!") == 0) /* Sucesso */
-				{
-					sucesso = write(1, registo, sizeof(registo));
-					if (sucesso < 0)
-					{
-						perror("main write 11");
-						_exit(EXIT_FAILURE);
-					}
-				}
-				else
-				if (strcmp(resposta, "UT_JA_EXISTE") == 0) /* Utilizador já existe */
-				{
-					sucesso = write(1, utJaExiste, sizeof(utJaExiste));
-					if (sucesso < 0)
-					{
-						perror("main write 12");
-						_exit(EXIT_FAILURE);
-					}
-				}
-				else
-				if (strcmp(resposta, "ERRO") == 0) /* Erro no servidor */
-				{
-					sucesso = write(1, erro, sizeof(erro));
-					if (sucesso < 0)
-					{
-						perror("main write 13");
-						_exit(EXIT_FAILURE);
-					}
-				}
+				sendMessage (0,mensagem, 2, 4);
     			break;
 
     		case 9: /* Sair */

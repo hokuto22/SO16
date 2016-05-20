@@ -193,7 +193,7 @@ int backup(int ppid, char *username, char *files){
 			strcat(mkd, pArray[n-1]);
 
 			c = readCommand(mkd);
-		/*SEND SIGNAL*/
+			kill()
 		}
 	}
 	return 0; /*CORREU BEM!*/
@@ -232,8 +232,8 @@ int saveUsers(node *users)
 
 int restore(int ppid, char *username, char *files){
 
-	int error = 0, n = 0, i = 0, m = 0, j = 0, k = 0, l = 0; 
-	char *token, *strArray[1024], *pArray[1024], *sArray[1024], *f, *ddir, *mdir, *dir, *dir2, *filen, *rest, *find, *drest;
+	int n = 0, j = 0; 
+	char *token, *pArray[1024], *dir, *dir2, *filen, *rest, *find, *drest;
 	Command c = NULL;
 
 	strcpy(dir2, path);
@@ -270,7 +270,8 @@ int restore(int ppid, char *username, char *files){
 	strcat(rest, files);
 
 	c = readCommand(rest);
-/*send signal*/
+	if(c->linhas == 0)
+		kill(ppid,SIGUSR2);
 
 	return 0;
 }
