@@ -362,7 +362,7 @@ int main(void)
    	    não estar ligado */
     signal(SIGTSTP, rotinaCliente);
     signal(SIGABRT, rotinaCliente);
-    signal(SIGILL, rotinaCliente);
+    signal(SIGINT, rotinaCliente);
     signal(SIGTERM, rotinaCliente);
     signal(SIGFPE, rotinaCliente);
    	signal(SIGUSR2, rotinaCliente);
