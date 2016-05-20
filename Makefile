@@ -3,13 +3,17 @@ CC = gcc
 CFLAGS = -pedantic -Wall -Wextra -O2 -fmax-errors=5
 SERVIDOR = server
 CLIENTE = cliente
+LIGARSERVIDOR = ligarServer
 
 export DIRSO = $HOME
 
-all: servidor cliente pastas
+all: servidor cliente  ligarServidor pastas
 
 servidor: $(SERVIDOR).o utils.o treeA.o
 	$(CC) $(CFLAGS) -o $(SERVIDOR) $(SERVIDOR).o utils.o treeA.o 
+
+ligarServidor: $(LIGARSERVIDOR).o utils.o
+	$(CC) $(CFLAGS) -o $(LIGARSERVIDOR) $(LIGARSERVIDOR).o utils.o
 
 cliente: $(CLIENTE).o utils.o treeA.o
 	$(CC) $(CFLAGS) -o $(CLIENTE) $(CLIENTE).o  utils.o treeA.o 
@@ -23,6 +27,8 @@ treeA.o: treeA.c treeA.h
 servidor.o: $(SERVIDOR).c utils.h
 	$(CC) $(CFLAGS) -c $(SERVIDOR).c
 	
+ligarServer.o: $(LIGARSERVIDOR).c utils.h
+	$(CC) $(CFLAGS) -c $(LIGARSERVIDOR).c	
 	
 cliente.o: $(CLIENTE).c cliente.h utils.h  
 	$(CC) $(CFLAGS) -c $(CLIENTE).c
