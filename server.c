@@ -16,8 +16,8 @@
 #define US_WRONG_PASS  		-4
 
 static tree *users;
-static char path[] = "$DIRSO/.Backup";
-static char pathAcc[] = "$DIRSO/.Backup/Accounts";
+static char path[] = "$DIRSO/.Backup/";
+static char pathAcc[] = "$DIRSO/.Backup/Accounts/";
 static int processesinqueue;
 
 void loaddata(){
@@ -377,7 +377,7 @@ int main(){
 
 	strcpy(dir, path);
 	strcat(dir,"FIFOs/fifo");
-	fd =makefifo(path, 0666);
+	fd =makefifo(dir, 0666);
 	if (fd < 0){
 		if(errno != EEXIST){
 			perror("main mkfifo");
@@ -420,7 +420,7 @@ int main(){
 		    		switch (success)
 		    		{
 		    			case 0: /* Sucesso */
-				    		sendMessage(message[2], "Registo efetuado com sucesso!");
+				    		sendMessage(message[2], "OK");
 		    				break;
 		    			
 		    			case US_ALREADY_EXISTS: /* Utilizador já existe */
