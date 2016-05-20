@@ -1,0 +1,75 @@
+==1020== Memcheck, a memory error detector
+==1020== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==1020== Using Valgrind-3.10.0 and LibVEX; rerun with -h for copyright info
+==1020== Command: ./testeArv
+==1020== Parent PID: 753
+==1020== 
+--1020-- 
+--1020-- Valgrind options:
+--1020--    --log-file=stuff
+--1020--    -v
+--1020--    --leak-check=full
+--1020--    --show-leak-kinds=all
+--1020-- Contents of /proc/version:
+--1020-- Arch and hwcaps: X86, LittleEndian, x86-mmxext-sse1-sse2
+--1020-- Page sizes: currently 4096, max supported 4096
+--1020-- Valgrind library directory: /usr/local/lib/valgrind
+--1020-- Reading syms from /libexec/ld-elf.so.1
+--1020--    object doesn't have a symbol table
+--1020-- Reading syms from /root/PROJETO/testeArv
+--1020-- Scheduler: using generic scheduler lock implementation.
+--1020-- Reading suppressions file: /usr/local/lib/valgrind/default.supp
+==1020== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-1020-by-root-on-GusSa
+==1020== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-1020-by-root-on-GusSa
+==1020== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-1020-by-root-on-GusSa
+==1020== 
+==1020== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==1020== don't want to do, unless you know exactly what you're doing,
+==1020== or are doing some strange experiment):
+==1020==   /usr/local/lib/valgrind/../../bin/vgdb --pid=1020 ...command...
+==1020== 
+==1020== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==1020==   /path/to/gdb ./testeArv
+==1020== and then give GDB the following command
+==1020==   target remote | /usr/local/lib/valgrind/../../bin/vgdb --pid=1020
+==1020== --pid is optional if only one valgrind process is running
+==1020== 
+--1020-- Reading syms from /usr/local/lib/valgrind/vgpreload_core-x86-freebsd.so
+--1020--    object doesn't have a symbol table
+--1020-- Reading syms from /usr/local/lib/valgrind/vgpreload_memcheck-x86-freebsd.so
+--1020--    object doesn't have a symbol table
+--1020-- Reading syms from /lib/libc.so.7
+--1020--    object doesn't have a symbol table
+--1020-- REDIR: 0x4161c28 (libc.so.7:strncmp) redirected to 0x402a250 (strncmp)
+--1020-- REDIR: 0x4168550 (libc.so.7:memset) redirected to 0x402b4c0 (memset)
+--1020-- REDIR: 0x40cc0c0 (libc.so.7:malloc) redirected to 0x4026f60 (malloc)
+--1020-- REDIR: 0x41629b0 (libc.so.7:strlen) redirected to 0x4029860 (strlen)
+--1020-- REDIR: 0x4168590 (libc.so.7:memcpy) redirected to 0x402a8e0 (memcpy)
+--1020-- REDIR: 0x4161d20 (libc.so.7:strcmp) redirected to 0x402a7d0 (strcmp)
+--1020-- REDIR: 0x40d1fc0 (libc.so.7:free) redirected to 0x4027b80 (free)
+==1020== 
+==1020== HEAP SUMMARY:
+==1020==     in use at exit: 4,096 bytes in 1 blocks
+==1020==   total heap usage: 18 allocs, 17 frees, 37,022 bytes allocated
+==1020== 
+==1020== Searching for pointers to 1 not-freed blocks
+==1020== Checked 4,510,464 bytes
+==1020== 
+==1020== 4,096 bytes in 1 blocks are still reachable in loss record 1 of 1
+==1020==    at 0x4026FCC: malloc (in /usr/local/lib/valgrind/vgpreload_memcheck-x86-freebsd.so)
+==1020==    by 0x41667E5: ??? (in /lib/libc.so.7)
+==1020==    by 0x4166699: ??? (in /lib/libc.so.7)
+==1020==    by 0x4155DE1: ??? (in /lib/libc.so.7)
+==1020==    by 0x41592FB: vfprintf (in /lib/libc.so.7)
+==1020==    by 0x4140C73: printf (in /lib/libc.so.7)
+==1020==    by 0x8048DF9: main (in /root/PROJETO/testeArv)
+==1020== 
+==1020== LEAK SUMMARY:
+==1020==    definitely lost: 0 bytes in 0 blocks
+==1020==    indirectly lost: 0 bytes in 0 blocks
+==1020==      possibly lost: 0 bytes in 0 blocks
+==1020==    still reachable: 4,096 bytes in 1 blocks
+==1020==         suppressed: 0 bytes in 0 blocks
+==1020== 
+==1020== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==1020== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

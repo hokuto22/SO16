@@ -1,0 +1,69 @@
+cliente.c:
+stdlib.h(298): warning: c89 C does not support 'long long' [265]
+stdlib.h(299): warning: c89 C does not support 'long long' [265]
+stdlib.h(299): warning: c89 C does not support 'long long' [265]
+strings.h(51): warning: c89 C does not support 'long long' [265]
+strings.h(54): warning: c89 C does not support 'long long' [265]
+endian.h(122): warning: extra bits set to 0 in conversion of 'unsigned int' to 'unsigned long long', op & [309]
+endian.h(122): warning: conversion to 'unsigned int' due to prototype, arg #1 [259]
+endian.h(122): warning: conversion to 'unsigned int' due to prototype, arg #1 [259]
+types.h(343): warning: conversion to 'unsigned int' due to prototype, arg #1 [259]
+types.h(343): warning: conversion to 'unsigned int' due to prototype, arg #1 [259]
+_types.h(61): warning: struct __timer never defined [233]
+_types.h(62): warning: struct __mq never defined [233]
+_strings.h(31): warning: struct _xlocale never defined [233]
+stdio.h(142): warning: struct pthread_mutex never defined [233]
+stdio.h(143): warning: struct pthread never defined [233]
+endian.h(111): warning: static function __bswap64_var unused [236]
+_pthreadtypes.h(45): warning: struct pthread_attr never defined [233]
+_pthreadtypes.h(46): warning: struct pthread_cond never defined [233]
+_pthreadtypes.h(47): warning: struct pthread_cond_attr never defined [233]
+_pthreadtypes.h(49): warning: struct pthread_mutex_attr never defined [233]
+_pthreadtypes.h(51): warning: struct pthread_rwlock never defined [233]
+_pthreadtypes.h(52): warning: struct pthread_rwlockattr never defined [233]
+_pthreadtypes.h(53): warning: struct pthread_barrier never defined [233]
+_pthreadtypes.h(54): warning: struct pthread_barrier_attr never defined [233]
+_pthreadtypes.h(55): warning: struct pthread_spinlock never defined [233]
+_pthreadtypes.h(78): warning: struct pthread_barrierattr never defined [233]
+types.h(237): warning: struct cap_rights never defined [233]
+types.h(301): warning: static function __bitcount16 unused [236]
+types.h(340): warning: static function __bitcount64 unused [236]
+time.h(59): warning: static function bintime_addx unused [236]
+time.h(70): warning: static function bintime_add unused [236]
+time.h(82): warning: static function bintime_sub unused [236]
+time.h(94): warning: static function bintime_mul unused [236]
+time.h(106): warning: static function bintime_shift unused [236]
+time.h(135): warning: static function sbintime_getsec unused [236]
+time.h(142): warning: static function bttosbt unused [236]
+time.h(149): warning: static function sbttobt unused [236]
+time.h(173): warning: static function bintime2timespec unused [236]
+time.h(182): warning: static function timespec2bintime unused [236]
+time.h(191): warning: static function bintime2timeval unused [236]
+time.h(199): warning: static function timeval2bintime unused [236]
+time.h(208): warning: static function sbttots unused [236]
+time.h(218): warning: static function tstosbt unused [236]
+time.h(226): warning: static function sbttotv unused [236]
+time.h(236): warning: static function tvtosbt unused [236]
+signal.h(117): warning: struct __ucontext never defined [233]
+lint: cannot find llib-lc.ln
+Lint pass2:
+read used( cliente.c(134) ), but not defined
+atoi used( cliente.c(250) ), but not defined
+strtok used( cliente.c(176) ), but not defined
+strdup used( cliente.c(142) ), but not defined
+getpid used( cliente.c(209) ), but not defined
+readLine used( cliente.c(55) ), but not defined
+malloc used( cliente.c(151) ), but not defined
+clrscr used( cliente.c(205) ), but not defined
+mkfifo used( cliente.c(112) ), but not defined
+strcat used( cliente.c(88) ), but not defined
+write used( cliente.c(49) ), but not defined
+_exit used( cliente.c(53) ), but not defined
+perror used( cliente.c(52) ), but not defined
+close used( cliente.c(140) ), but not defined
+open used( cliente.c(128) ), but not defined
+strcmp used( cliente.c(168) ), but not defined
+strcpy used( cliente.c(83) ), but not defined
+__error used( cliente.c(115) ), but not defined
+sprintf used( cliente.c(85) ), but not defined
+strlen used( cliente.c(28) ), but not defined
