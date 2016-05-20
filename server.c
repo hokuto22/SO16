@@ -59,41 +59,27 @@ void loaddata(){
 	}
 }
 
-void *sendMessage(char *user, char *message)
+void sendMessage(char *fifo, char *message)
 {
 	int i = 0, n = 0, response = 0, pid = 0;
 	char send[512] = {0}, receve[512] = {0}; /* Tamanho máximo das mensagens 512 bytes */
 	char *error = NULL, *res = NULL, ff[512], pidC[128];
 	
 	strcpy(ff, "FIFOs/");
-	sprintf(pidC, "%d", pid);
-
-	error = strcpy(send, user);
-	error = strcat(send, ":");
-	error = strcat(send, message);
-	
-	if (error == NULL)
-	{
-		perror("sendMessage strcat");
+	strcat(ff, fifo);
+	fd = open(ff, O_WRONLY);
+	if(fd < 0){
+		perror("sendMessage open");
 		_exit(EXIT_FAILURE);
 	}
 
-	response = mkfifo(ff, 0666);
-    if (response < 0)
-    {
-    	if (errno != EEXIST)
-    	{
-    		perror("sendMessage mkfifo");
-    		_exit(EXIT_FAILURE);
-    	}
-    }
-	n = write(ff, send, sizeof(char) * strlen(send)); /* Nunca enviar mensagens maiores que 512 bytes */
-	if (n < 0)
-	{
-		perror("Comunication with the Server failed!\n");
+	n = write(fd, message, sizeof(char) * strlen(message));
+	if(n<0){
+		perror("sendMessage write");
 		_exit(EXIT_FAILURE);
 	}
 
+	close(fd);
 }
 
 int backup(int ppid, char *username, char *files){
@@ -106,15 +92,12 @@ int backup(int ppid, char *username, char *files){
 	strcat(dir2, "/");
 	strcat(dir2, username);
 	token =  strtok( files, " ");
-/*
+
 	while(token != NULL){
 		strArray[i] = strdup(token);
 		token =  strtok(NULL, " ");
 		i++
 	}
-*/
-
-
 
 	for(k = 0; k < i; k++){
 		
@@ -193,7 +176,7 @@ int backup(int ppid, char *username, char *files){
 			strcat(mkd, pArray[n-1]);
 
 			c = readCommand(mkd);
-			kill()
+			kill(ppid, SIGUSR1);
 		}
 	}
 	return 0; /*CORREU BEM!*/
@@ -424,7 +407,7 @@ int main(){
 		    				break;
 		    			
 		    			case US_ALREADY_EXISTS: /* Utilizador já existe */
-			    			sendMessage(message[2], "UT_JA_EXISTE");
+			    			sendMessage(message[2], "US_ALREADY_EXISTS");
 			    			break;
 		    			
 			    		default:
