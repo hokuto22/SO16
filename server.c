@@ -61,7 +61,7 @@ void loaddata(){
 	}
 }
 
-void sendMessage(char *fifo, char *message)
+/*void sendMessage(char *fifo, char *message)
 {
 	int fd = 0, n = 0;
 	char *ff = NULL;
@@ -84,11 +84,11 @@ void sendMessage(char *fifo, char *message)
 
 	close(fd);
 }
-
+*/
 int backup(char *ppid, char *username, char *files){
 
 	int n = 0, i = 0, m = 0, j = 0, k = 0, l = 0, pid = 0; 
-	char *token, *strArray[1024], *pArray[1024], *sArray[1024], *f, *ddir, *mdir, *dir, *dir2, *mkd, *filen, *s1, *sha;
+	char *token, *strArray[1024], *pArray[1024], *sArray[1024], *tArray[1024], *f, *ddir, *mdir, *dir, *dir2, *mkd, *filen, *s1, *sha;
 	Command c = NULL;
 
 	pid = atoi(ppid);
@@ -103,86 +103,89 @@ int backup(char *ppid, char *username, char *files){
 		i++;
 	}
 
-	for(k = 0; k < i; k++){
+	//for(k = 0; k < i; k++){
 		
-		dir = strdup(strArray[k]);
+	dir = strdup(strArray[k]);
 		
-		token =  strtok( files, "/");
+		//token =  strtok( files, "/");
 
-		while(token != NULL){
-			pArray[n] = strdup(token);
-			token =  strtok(NULL, " ");
-			n++;
-		}
+		// while(token != NULL){
+		// 	pArray[n] = strdup(token);
+		// 	token =  strtok(NULL, " ");
+		// 	n++;
+		// }
 
-		filen = pArray[n-1];
-		f = strdup("ls");
-		strcat(f, dir);
-		c = readCommand(f);
-
-		for(l = 0; l <c->lines; l++){
-
+		// filen = pArray[n-1];
+		// f = strdup("ls");
+		// strcat(f, dir);
+		// c = readCommand(f);
+	k = i;
+		// for(l = 0; l <c->lines; l++){
+		for(i=1; i<k ; i++ ){
 			sha = strdup("sha1sum ");
-			strcat(sha, c->output[l]);
+			strcat(sha, strArray[i]);
 
 			c = readCommand(sha);
 
 			token = strtok( c->output[0], " ");
-
-			while(token != NULL){
-				sArray[m] = strdup(token);
-				token = strtok(NULL, " ");
-				m++;
+			tArray[i] = strdup(token);
 			}
+			// while(token != NULL){
+			// 	sArray[m] = strdup(token);
+			// 	token = strtok(NULL, " ");
+			// 	m++;
+			// }
 
-			s1 = sArray[0];
+			// s1 = sArray[0];
 
 
-			for( j = 0; j < n-2; j++){
-				strcat(dir2, pArray[j]);
-				mkd = strdup("mkdir ");
-				strcat(mkd, dir2);
-				c = readCommand(mkd);
+			// for( j = 0; j < n-2; j++){
+			// 	strcat(dir2, pArray[j]);
+			// 	mkd = strdup("mkdir ");
+			// 	strcat(mkd, dir2);
+			// 	c = readCommand(mkd);
 
-				if(j == n-2){
-					if(c->lines == 1 ){
-						perror("backup mkdir");
-						_exit(EXIT_FAILURE);
-					}
-				}
-			}
-			ddir = strdup(mkd);
-			strcat(ddir, "/data/");
-			c = readCommand(ddir);
-			if(c->lines == 1 ){
-				perror("backup mkdir");
-				_exit(EXIT_FAILURE);
-			}
-			mdir = strdup(mkd);
-			strcat(mdir, "/metadata/");
-			c = readCommand(mdir);
-			if(c->lines == 1 ){
-				perror("backup mkdir");
-				_exit(EXIT_FAILURE);
-			}
+			// 	if(j == n-2){
+			// 		if(c->lines == 1 ){
+			// 			perror("backup mkdir");
+			// 			_exit(EXIT_FAILURE);
+			// 		}
+			// 	}
+			// // }
+			// // ddir = strdup(mkd);
+			// strcat(ddir, "/data/");
+			// c = readCommand(ddir);
+			// if(c->lines == 1 ){
+			// 	perror("backup mkdir");
+			// 	_exit(EXIT_FAILURE);
+			// }
+			// mdir = strdup(mkd);
+			// strcat(mdir, "/metadata/");
+			// c = readCommand(mdir);
+			// if(c->lines == 1 ){
+			// 	perror("backup mkdir");
+			// 	_exit(EXIT_FAILURE);
+			// }
+			c = readCommand("cd /.Backup/data");
+
+		for(i=1; i<k; i++){
 			strcpy(mkd, "gzip -c ");
-			strcat(mkd, dir);
+			strcat(mkd, strArray[i]);
 			strcat(mkd, "> ");
-			strcat(mkd, ddir );
-			strcat(mkd, s1);
-
+			strcat(mkd, tArray[i]);
 			c = readCommand(mkd);
-			strcpy(mkd, "ln -s -f ");
-			strcat(mkd, ddir);
-			strcat(mkd, s1);
-			strcat(mkd, " ");
-			strcat(mkd, mdir);
-			strcat(mkd, filen);
-
-			c = readCommand(mkd);
-			kill(pid, SIGUSR1);
 		}
-	}
+			// strcpy(mkd, "ln -s -f ");
+			// strcat(mkd, ddir);
+			// strcat(mkd, s1);
+			// strcat(mkd, " ");
+			// strcat(mkd, mdir);
+			// strcat(mkd, filen);
+
+			// c = readCommand(mkd);
+			kill(pid, SIGUSR1);
+		
+	
 	return 0; /*CORREU BEM!*/
 }
 
@@ -216,24 +219,26 @@ int saveUsers(node *users)
 	return 0;
 }
 
-int restore(char *ppid, char *username, char *files){
+int restore(char *cmd, char *username, char *files){
 
 	int n = 0, j = 0, pid = 0; 
 	char *token, *pArray[1024], *dir, *dir2, *filen, *rest, *find, *drest;
+	const char *env = getenv("HOME");
 	Command c = NULL;
 
-	pid = atoi(ppid);
-	dir2 = strdup(path);
+	pid = atoi(cmd);
+	dir2 = strdup(env);
+	strcat(dir2, path);
 	strcat(dir2, username);
 	strcat(dir2, "/");
 
 	dir = strdup(files);
 		
-	token = strtok( files, "/");
+	token = strtok( files, " ");
 
 	while(token != NULL){
 		pArray[n] = strdup(token);
-		token =  strtok(NULL, "/");
+		token =  strtok(NULL, " ");
 		n++;
 	}
 
@@ -263,45 +268,50 @@ int restore(char *ppid, char *username, char *files){
 	return 0;
 }
 
-int login( char *username, char *pass){
-	int res = 0;
+int login(char *fifo, char *username, char *pass){
+	int res = 0, pid=0;
 
+	pid = atoi(fifo);
 	res = existUser(users->root,username,pass);
-	if (res == -2) 
-		return US_NOT_REGISTERED;
+	if (res == -2)
+		kill(pid,SIGFPE);
 	else{ 
 		if(res == -4) 
-			return US_WRONG_PASS;
+			kill(pid,SIGTSTP);
 	} 
-		return res;
+	else{kill(pid, SIGTERM);}
+	
 }
 
-int reg(char *username, char *pass){
-	int res;
+void reg(char *fifo,char *username, char *pass){
+	int res, pid = 0;
 	char dir[1024];
 	Command c = NULL;
+	pid = atoi(fifo);
 
 	res = existUser(users->root,username,pass);
 	printf("\n\n%d\n\n",res);
 	if(res == -2){
 
-// 	strcpy(dir, "mkdir ");
-// 	strcat(dir, pathAcc);
-// 	strcat(dir, username);
-// //	strcat(dir, FOLDER_NAME);
 
-//     c = readCommand(dir);
+ 	strcpy(dir, "sudo mkdir -p ");
+  	strcat(dir, pathAcc);
+  	strcat(dir, username);
+ //	strcat(dir, FOLDER_NAME);
 
-//     if(c->lines > 0){
-//     	perror("reg mkdir");
-//     	_exit(EXIT_FAILURE);	
-//     } 
+    c = readCommand(dir);
+
+    // if(c->lines > 0){
+    //  	perror("reg mkdir");
+    //  	_exit(EXIT_FAILURE);	
+    //  } 
 
 	insertTree(users, username, pass);
 
-	res = 0;
+		kill(pid, SIGINT);
+	}else{
+		kill(pid, SIGABRT);
 	}
-return res;
 }
 
 int readFifo(char *fifo, char ***message)
@@ -323,7 +333,7 @@ int readFifo(char *fifo, char ***message)
 	
 	if (n < 0){
 		perror("shell read");
-		//_exit(EXIT_FAILURE);
+		_exit(EXIT_FAILURE);
 	}
 	printf("\nLI! -- %s\n", buffer);
 
@@ -395,48 +405,13 @@ int main(){
 		if(tipe==1 || tipe == 2){
 				if(tipe == 1) {
 					printf("\nM3- %s\nM4- %s\n",message[3],message[4]);
-				success = login(message[3],message[4]);
-					switch(success){
-						case 1:
-							sendMessage(message[3], "US_LOGIN_SUCCESSFUL");
-							break;
-						case US_NOT_REGISTERED: /* Utilizador não existe */
-			    			sendMessage(message[3], "UT_NAO_EXISTE");
-			    			break;
-			    			
-		    			case US_WRONG_PASS: /* Pass errada */
-		    				sendMessage(message[3], "UT_PASS_ERRADA");
-		    				break;
-		    			
-			    		default:
-			    			sendMessage(message[3], "ERRO");
-			    			break;
-		    		}
-    			}
-
+					login(message[2],message[3],message[4]);
+					}
  				else if(tipe == 2){
-		    	success = reg(message[3], message[4]);
-		    		switch (success)
-		    		{
-		    			case 0: /* Sucesso */
-				    		sendMessage(message[3], "OK");
-		    				break;
-		    			
-		    			case US_ALREADY_EXISTS: /* Utilizador já existe */
-			    			sendMessage(message[3], "US_ALREADY_EXISTS");
-			    			break;
-		    			
-			    		default:
-		    				sendMessage(message[3], "ERRO");
-		    				break;
-		    		}
+		    		reg(message[2],message[3], message[4]);
     			}
     		}
-    	else if(tipe > 2){
-    		if(contaF < 5){
-    			cpid[contaF] = fork();
-    			
-    			if(tipe == 3 && cpid[contaF] == 0){
+    		else if(tipe == 3){
     				success = backup(message[3],message[0],message[4]);
     				pid = atoi(message[3]);
     				switch(success)
@@ -447,10 +422,9 @@ int main(){
 	   	    			default:
 	   	    				kill(pid, SIGTERM);
 	    			}
-	    			_exit(0);
 	   			}
 
-				else if(tipe == 4 && cpid[contaF] == 0){
+				else if(tipe == 4){
 					success = restore(message[3], message[0],message[4]);
 					pid = atoi(message[3]);
 					switch(success){
@@ -459,16 +433,9 @@ int main(){
    							break;
 	   	    			default:
 	    					kill(pid, SIGTERM);
-					}
-					_exit(0); /*restore*/    		
+					}  		
 				}
-				contaF++;
 			}
-		}
-		
-		wait(NULL);
-
-	}
-
-	return 0;	
+	return 0;
 }
+		

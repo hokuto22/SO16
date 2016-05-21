@@ -153,46 +153,47 @@ ssize_t readLine(int fildes, void *buf, size_t nbyte)
 Command readCommand(char *command)
 {
 	int i = 0, tam = 1024, j = 0, pid = 0, status = 0, pd[2], erro = 0;
-	char **output = (char **)malloc(sizeof(char *) * tam), **aux;
+	// char **output = (char **)malloc(sizeof(char *) * tam), **aux;
 	Command res = (Command)malloc(sizeof(NCommand));
 	
-	if (output == NULL || res == NULL)
-	{
-		perror("readCommand malloc");
-		_exit(EXIT_FAILURE);
-	}
-	for (i = 0; i < tam; i++)
-	{
-		output[i] = (char *)malloc(sizeof(char) * TAM_LINHA);
-		if (output[i] == NULL)
-		{
-			perror("readCommand malloc 2 output");
-			_exit(EXIT_FAILURE);
-		}
-	}
-	erro = pipe(pd);
-	if (erro < 0)
-	{
-		perror("readCommand pipe");
-		_exit(EXIT_FAILURE);
-	}
-	pid = fork();
-	switch (pid)
-	{
+	// if (output == NULL || res == NULL)
+	// {
+	// 	perror("readCommand malloc");
+	// 	_exit(EXIT_FAILURE);
+	// }
+	// for (i = 0; i < tam; i++)
+	// {
+	// 	output[i] = (char *)malloc(sizeof(char) * TAM_LINHA);
+	// 	if (output[i] == NULL)
+	// 	{
+	// 		perror("readCommand malloc 2 output");
+	// 		_exit(EXIT_FAILURE);
+	// 	}
+	// }
+	// erro = pipe(pd);
+	// if (erro < 0)
+	// {
+	// 	perror("readCommand pipe");
+	// 	_exit(EXIT_FAILURE);
+	// }
+	 pid = fork();
+	 switch (pid)
+	 {
 		case -1:
 			perror("readCommand fork");
 			_exit(EXIT_FAILURE);
 		
-		case 0: 
-			close(pd[0]); 
-			dup2(pd[1], 1); 
-			close(pd[1]); 
-			execl("/bin/sh", "sh", "-c", command, (char *) NULL);
-			perror("readCommand execl");
-			_exit(EXIT_FAILURE);
+	 	case 0: 
+	// 		close(pd[0]); 
+			// dup2(pd[1], 1); 
+			// close(pd[1]); 
+			execl("/bin/sh", "sh", "-c", command, NULL);
+			// break;
+			// perror("readCommand execl");
+			// _exit(EXIT_FAILURE);
 		
-		default:
-			close(pd[1]); 
+	 	default:
+	// 		close(pd[1]); 
 			erro = waitpid(pid, &status, 0); 
 			if (erro < 0) 
 			{
@@ -210,28 +211,30 @@ Command readCommand(char *command)
 				}
 			}
 	}
-	i = 0;
-	while (readLine(pd[0], output[i], TAM_LINHA) > 0)
-	{
-		i++;
-		if (i == tam)
-		{
-			tam *= 2;
-			aux = (char **)realloc(output, sizeof(char *) * tam);
-			if (aux == NULL)
-			{
-				perror("readCommand realloc");
-				_exit(EXIT_FAILURE);
-			}
-			output = aux;
-			for (j = i; j < tam; j++) 
-				output[j] = (char *)malloc(sizeof(char) * TAM_LINHA);
-		}
-	}
-	close(pd[0]); 
-	tam = i;
-	res->output = output;
-	res->lines = tam;
+	// i = 0;
+	// while (readLine(pd[0], output[i], TAM_LINHA) > 0)
+	// {
+	// 	i++;
+	// 	if (i == tam)
+	// 	{
+	// 		tam *= 2;
+	// 		aux = (char **)realloc(output, sizeof(char *) * tam);
+	// 		if (aux == NULL)
+	// 		{
+	// 			perror("readCommand realloc");
+	// 			_exit(EXIT_FAILURE);
+	// 		}
+	// 		output = aux;
+	// 		for (j = i; j < tam; j++) 
+	// 			output[j] = (char *)malloc(sizeof(char) * TAM_LINHA);
+	// 	}
+	// }
+	// //close(pd[0]); 
+	// tam = i;
+	// res->output = output;
+	// res->lines = tam;
 	
+	printf("\nMORRI!\n");
+
 	return res;
 }
